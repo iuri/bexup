@@ -2,14 +2,6 @@
 Bexup evaluation source
 Teste BEXUP:
 
-
-1. Backend
-2. FrontEnd
-
-Subir no github e enviar link para o email: rsimonassi@bexup.com
-
-
-
 1 .BackEnd:
 
 1.1. Criar um serviço REST na API-1 para acionar a ”carga inicial” dos dados de veículos.
