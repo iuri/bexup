@@ -1,10 +1,12 @@
+require('dotenv').config({path: __dirname + '/.env'})
+
 const express = require('express');
 const axios = require('axios');
 
 //TODO: to implement JWT properly
 const jwt = require('jsonwebtoken');
 // Secret key for signing and verifying tokens
-const secretKey = 'start';
+const secretKey = process.env.JWT_SECRET_KEY;
 
 
 // const db = require('./db_conn.js')
@@ -12,15 +14,12 @@ const secretKey = 'start';
 const { Pool } = require('pg')
 
 const pool = new Pool({
-    user: 'postgres',
-    //host: '172.17.0.2',
-    host: 'localhost',
-    database: 'bexup',
-    password: 'start',
-    port: 51244
+    user: process.env.DB_USER,
+    host: process.env.DB_HOST,
+    database: process.env.DB_NAME,
+    password: process.env.DB_PWD,
+    port: process.env.DB_PORT
 })
-
-
 
 const app = express();
 const port = 8080;

@@ -51,3 +51,20 @@ Obs: Todo o cuidado com o desenvolvimento será considerado, como: uso das boas 
 ![Screen Shot 2023-05-30 at 10 12 37 PM](https://github.com/iuri/bexup/assets/630005/0e6fe1ee-0e46-4d2d-b5e0-ab870942e4d1)
 
 
+
+
+To install docker container, run
+docker build . -t bexup-api2
+
+To run it:
+NodeJS
+docker run --name bexup-api2 -p 49160:8080 -d nodejs
+PGSQL
+docker run --name pgsql-dev -e POSTGRES_USER=postgres -e POSTGRES_PASSWORD=start -p 51244:5432 -d postgres 
+PGMyAdmin
+docker run --name pgadmin-dev -p 8081:80 -e 'PGADMIN_DEFAULT_EMAIL=postgres@bexup.com' -e 'PGADMIN_DEFAULT_PASSWORD=start' -d dpage/pgadmin4
+
+
+To access it:
+docker exec -it pgsql-dev bash
+docker exec -it bexup-api2 bash
