@@ -1,7 +1,7 @@
 const jwt = require('jsonwebtoken');
 
 // Secret key for signing and verifying tokens
-const secretKey = 'start';
+const secretKey = process.env.JWT_SECRET_KEY;
 
 // Generate a JWT
 const generateToken = (payload) => {
@@ -27,8 +27,11 @@ const payload = { userId: 123, username: 'john.doe' };
 const token = generateToken(payload);
 console.log('Generated token:', token);
 
-// Verify a token
-const decodedToken = verifyToken(token);
-if (decodedToken) {
-  console.log('Decoded token:', decodedToken);
-}
+// TODO: to Implement tests in NOIDEJS
+// Test1: Verify a token
+// const decodedToken = verifyToken(token);
+// if (decodedToken) {
+  // console.log('Decoded token:', decodedToken);
+// }
+
+module.exports= { generateToken, verifyToken }

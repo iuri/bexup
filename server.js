@@ -4,12 +4,13 @@ const express = require('express');
 const axios = require('axios');
 
 //TODO: to implement JWT properly
-const jwt = require('jsonwebtoken');
-// Secret key for signing and verifying tokens
-const secretKey = process.env.JWT_SECRET_KEY;
+///
+/// Security implementation
+///
+const { generateToken, verifyToken } = require('./jwt.js');
 
 
-const db_pool = require('./db_conn.js')
+const db_pool = require('./db_conn.js');
 
 const app = express();
 const port = 8080;
@@ -55,6 +56,7 @@ app.post('/s', (req, res) => {
 app.get('/getToken', (req, res) => {
     console.log('Running function getToken...');
     // Generate a token
+    // forced authentication with statis credentials 
     const payload = { userId: 123, username: 'john.doe' };
     const token = generateToken(payload);
     
@@ -63,28 +65,7 @@ app.get('/getToken', (req, res) => {
 });
   
   
-///
-/// Security implementation
-///
 
-// Generate a JWT
-const generateToken = (payload) => {
-  const token = jwt.sign(payload, secretKey, { expiresIn: '1h' });
-  return token;
-};
-
-// Verify a JWT
-const verifyToken = (token) => {
-    try {
-      const decoded = jwt.verify(token, secretKey);
-      return decoded;
-    } catch (error) {
-      console.error('Error verifying token:', error);
-      return null;
-    }
-};
-
-  
 
 
 ////
@@ -109,7 +90,7 @@ function dequeue() {
 
 function processJSONData(jsonData) {
     // Perform processing on the JSON data
-    console.log('Processing JSON data:', jsonData);
+    // console.log('Processing JSON data:', jsonData);
     enqueue(jsonData);
     // Example: Extract specific properties from the JSON data
   
@@ -166,15 +147,19 @@ async function retrieveData(item) {
 
 
 async function saveDataToDatabase(code, model, brand_code, brand_name) {
-   // console.log('Running function saveDataToDatabase() ...')
-    const query = 'INSERT INTO vehicles (code, model, brand_code, brand_name) VALUES ($1, $2, $3, $4)'
+   console.log('Running function saveDataToDatabase() ...')
+   //
+   // TODO: to migrate to Cloud SQL
+   // TODO: To remove SQL from js file. Add a function to wrap them up!; 
+   //
+   const query = 'INSERT INTO vehicles (code, model, brand_code, brand_name) VALUES ($1, $2, $3, $4)'
     const values = [parseInt(code), String(model), parseInt(brand_code), String(brand_name)]
 
     try {
         const client = await db_pool.connect();
         await client.query(query, values);
         client.release();
-        console.log('Data saved to the database', values);
+        // console.log('Data saved to the database', values);
         return 'Data saved to the database';
 
     } catch (error) {
