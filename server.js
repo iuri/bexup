@@ -9,17 +9,7 @@ const jwt = require('jsonwebtoken');
 const secretKey = process.env.JWT_SECRET_KEY;
 
 
-// const db = require('./db_conn.js')
-// database connection settings
-const { Pool } = require('pg')
-
-const pool = new Pool({
-    user: process.env.DB_USER,
-    host: process.env.DB_HOST,
-    database: process.env.DB_NAME,
-    password: process.env.DB_PWD,
-    port: process.env.DB_PORT
-})
+const db_pool = require('./db_conn.js')
 
 const app = express();
 const port = 8080;
@@ -163,7 +153,7 @@ async function processQueue() {
 async function retrieveData(item) {
   console.log('Retrieving Item:', item);
     try {
-        const response = await axios.get('https://parallelum.com.br/fipe/api/v1/carros/marcas/' + item.codigo + '/modelos');
+        const response = await axios.get(process.env.API_FIPE_URL+'carros/marcas/' + item.codigo + '/modelos');
         // console.log(response.data); // Display the retrieved data in the console
         return response.data
     // TODO: save data to BD
@@ -181,10 +171,10 @@ async function saveDataToDatabase(code, model, brand_code, brand_name) {
     const values = [parseInt(code), String(model), parseInt(brand_code), String(brand_name)]
 
     try {
-        // const client = await pool.connect();
-        // await client.query(query, values);
-        // client.release();
-        // console.log('Data saved to the database', values);
+        const client = await db_pool.connect();
+        await client.query(query, values);
+        client.release();
+        console.log('Data saved to the database', values);
         return 'Data saved to the database';
 
     } catch (error) {
