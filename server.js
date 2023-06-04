@@ -5,8 +5,12 @@ const express = require('express');
 const { Pool } = require('pg'); 
 const axios = require('axios');
 const cors = require('cors');
+const bodyParser = require('body-parser');
 
-const db_pool = require('./database.js');
+// PGSQL implementation 
+const db_pool = require('./db_conn.js');
+ const { getId  } = require('./database.js');
+
 
 //TODO: to implement JWT properly
 ///
@@ -20,6 +24,10 @@ const { generateToken, verifyToken } = require('./jwt.js');
 const app = express();
 const port = 8080;
 app.use(express.json());
+
+// middleware tpo parse body reuqest using best practices
+app.use(bodyParser.json());
+
 
 app.post('/s', (req, res) => {
     const jsonData = req.body;
@@ -54,41 +62,15 @@ app.post('/s', (req, res) => {
 */
 });
 
-
-
-async function search(req, res, item) {
-    
-    switch (item) {
-        case 'brands':
-            var query = 'SELECT DISTINCT brand_name FROM vehicles';
-            break;
-        case 'codes':
-            var query = 'SELECT code, name, brand_name, details FROM vehicles';
-            
-        default:
-            var query = 'SELECT DISTINCT brand_name FROM vehicles';
-            
-    }
-
-    db_pool.query(query, (err, result) => {
-        if (err) {
-            console.error('Error executing query:', err);
-            res.status(500).json({ error: 'Internal Server Error '});
-            return;
-        }
-        
-        const rows = result.rows;
-        // Process the retrieved records
-        // console.log('rows:', rows);
-        res.json({data: rows});      
-    });      
-    return 
-}
-
-
 app.get('/api/search/marcas', (req, res) => {
     console.log('Running search marcas ');
     search(req, res, 'marcas');
+    // return 
+});
+
+app.post('/api/search/modelos', (req, res) => {
+    console.log('Running search modelos ');
+    search(req, res, 'models');
     // return 
 });
 
@@ -113,7 +95,7 @@ app.get('/getToken', (req, res) => {
 
 
 
-// TODO: move the chunk below to a file 
+// TODO: move the chunk below to separated files
 
 
 ////
@@ -153,7 +135,7 @@ async function processQueue() {
         // to be changed, to dequeue only if sending was successfull 
         try {
             const item = dequeue(); // Dequeue an item from the queue
-            const jsonData = await retrieveData(item); // Send the item to another endpoint
+            const jsonData = await getDataFromFIPE(item); // Send the item to another endpoint
 
             // console.log('jsonData', jsonData)
             jsonData.modelos.forEach(m => {
@@ -179,7 +161,7 @@ async function processQueue() {
     }
 }
 
-async function retrieveData(item) {
+async function getDataFromFIPE(item) {
   console.log('Retrieving Item:', item);
     try {
         const response = await axios.get(process.env.API_FIPE_URL+'carros/marcas/' + item.codigo + '/modelos');
@@ -194,14 +176,14 @@ async function retrieveData(item) {
 }
 
 
-async function saveDataToDatabase(code, model, brand_code, brand_name) {
+async function saveDataToDatabase(code, title, brand_code, brand_title) {
    console.log('Running function saveDataToDatabase() ...')
    //
    // TODO: to migrate to Cloud SQL
    // TODO: To remove SQL from js file. Add a function to wrap them up!; 
    //
-   const query = 'INSERT INTO vehicles (code, model, brand_code, brand_name) VALUES ($1, $2, $3, $4)'
-    const values = [parseInt(code), String(model), parseInt(brand_code), String(brand_name)]
+   const query = 'INSERT INTO models (code, title, brand_code, brand_title) VALUES ($1, $2, $3, $4)'
+    const values = [parseInt(code), String(title), parseInt(brand_code), String(brand_title)]
 
     try {
         const client = await db_pool.connect();
@@ -214,6 +196,8 @@ async function saveDataToDatabase(code, model, brand_code, brand_name) {
         console.error('Error saving data to the database.', error);
     }
 }
+
+
 
 
 /* 
@@ -229,6 +213,59 @@ app.use('/api', createProxyMiddleware({
 }));
 
 */
+
+
+
+
+
+
+////////
+/// Search
+////
+
+
+
+function search(req, res, type) {
+    // console.log('body', req.body);
+    query = '';
+    switch (type) {
+        case 'brands':
+            query = 'SELECT DISTINCT brand_name FROM models';
+            break;
+        case 'models':
+            code = req.body.code, type;
+            query = 'SELECT code, title, brand_title, notes FROM models WHERE brand_code = ' + code; 
+            break;                
+        default:
+            query = 'SELECT DISTINCT brand_title FROM models';        
+    }
+
+
+    try {
+        db_pool.query(query, (err, result) => {
+            if (err) {
+                console.error('Error executing query:', err);
+                res.status(500).json({ error: 'Internal Server Error: Inexistent id'});
+                return;
+            }
+            
+            const rows = result.rows;
+            // Process the retrieved records
+            // console.log('rows:', rows);
+            res.json({data: rows});      
+    
+        });      
+
+    } catch (error) {
+        console.log("Internal Error");
+        res.status(500).json({ error: 'Internal Server Error '});
+    }
+           
+    return 
+}
+
+
+
 
 app.listen(port, () => {
     console.log(`App listening at http://localhost:${port}`);
