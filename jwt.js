@@ -20,14 +20,15 @@ const verifyToken = (token) => {
   }
 };
 
+
+// TODO: to Implement tests in NOIDEJS
 // Example usage
 
 // Generate a token
-const payload = { userId: 123, username: 'john.doe' };
-const token = generateToken(payload);
-console.log('Generated token:', token);
+// const payload = { userId: 123, username: 'john.doe' };
+// const token = generateToken(payload);
+// console.log('Generated token:', token);
 
-// TODO: to Implement tests in NOIDEJS
 // Test1: Verify a token
 // const decodedToken = verifyToken(token);
 // if (decodedToken) {

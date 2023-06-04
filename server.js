@@ -1,7 +1,12 @@
 require('dotenv').config({path: __dirname + '/.env'})
 
+
 const express = require('express');
+const { Pool } = require('pg'); 
 const axios = require('axios');
+const cors = require('cors');
+
+const db_pool = require('./database.js');
 
 //TODO: to implement JWT properly
 ///
@@ -10,13 +15,11 @@ const axios = require('axios');
 const { generateToken, verifyToken } = require('./jwt.js');
 
 
-const db_pool = require('./db_conn.js');
+
 
 const app = express();
 const port = 8080;
 app.use(express.json());
-
-
 
 app.post('/s', (req, res) => {
     const jsonData = req.body;
@@ -53,6 +56,43 @@ app.post('/s', (req, res) => {
 
 
 
+async function search(req, res, item) {
+    
+    switch (item) {
+        case 'brands':
+            var query = 'SELECT DISTINCT brand_name FROM vehicles';
+            break;
+        case 'codes':
+            var query = 'SELECT code, name, brand_name, details FROM vehicles';
+            
+        default:
+            var query = 'SELECT DISTINCT brand_name FROM vehicles';
+            
+    }
+
+    db_pool.query(query, (err, result) => {
+        if (err) {
+            console.error('Error executing query:', err);
+            res.status(500).json({ error: 'Internal Server Error '});
+            return;
+        }
+        
+        const rows = result.rows;
+        // Process the retrieved records
+        // console.log('rows:', rows);
+        res.json({data: rows});      
+    });      
+    return 
+}
+
+
+app.get('/api/search/marcas', (req, res) => {
+    console.log('Running search marcas ');
+    search(req, res, 'marcas');
+    // return 
+});
+
+
 app.get('/getToken', (req, res) => {
     console.log('Running function getToken...');
     // Generate a token
@@ -66,6 +106,14 @@ app.get('/getToken', (req, res) => {
   
   
 
+
+
+
+
+
+
+
+// TODO: move the chunk below to a file 
 
 
 ////
@@ -168,9 +216,22 @@ async function saveDataToDatabase(code, model, brand_code, brand_name) {
 }
 
 
+/* 
+app.use(cors());
+const { createProxyMiddleware } = require('http-proxy-middleware');
+app.use('/api', createProxyMiddleware({
+    target: 'http://localhost:8080', // original url
+    changeOrigin: true,
+    //secure: false,
+    onProxyRes: function(proxyRes, req, res) {
+        proxyRes,headers['Access-Control-Allow-Origin'] = '*';
+    }
+}));
+
+*/
 
 app.listen(port, () => {
-  console.log(`App listening at http://localhost:${port}`);
+    console.log(`App listening at http://localhost:${port}`);
 });
-
-
+  
+  
