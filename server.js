@@ -38,14 +38,21 @@ app.post('/s', (req, res) => {
 
     decodedToken = verifyToken(String(header).split(' ')[1]);
     console.log(decodedToken);
-    // Process the JSON data
-    console.log('Received JSON data:', jsonData);
-    processJSONData(jsonData);  
-    msg = processQueue();  
+    if (decodedToken != '') {
+        // Process the JSON data
+        console.log('Received JSON data:', jsonData);
+        processJSONData(jsonData);  
+        msg = processQueue();  
 
-    // Send a response
-    res.status(200).json({ message: msg });
-/*     if (decodedToken > 0) {
+        // Send a response
+        res.status(200).json({ message: msg });
+
+ 
+    } else {
+        // Send a response
+        res.status(498).json({ message: 'Invalid Token!'});
+    }
+    /*     if (decodedToken > 0) {
 
         // Process the JSON data
         console.log('Received JSON data:', jsonData);
@@ -55,23 +62,53 @@ app.post('/s', (req, res) => {
         // Send a response
         res.status(200).json({ message: msg });
 
-    } else {
-        // Send a response
-        res.status(498).json({ message: 'Invalid Token!'});
-    }
+
 */
 });
 
 app.get('/api/search/marcas', (req, res) => {
     console.log('Running search marcas ');
-    search(req, res, 'marcas');
-    // return 
+
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+
+    const header = req.headers.authorization;
+
+    if (typeof header == 'undefined') {
+        // console.log('Wrong request! No header.');
+        // Send a response
+        res.status(401).json({ message: 'unathorized' });
+        return;
+    }
+
+    // console.log(header);
+    decodedToken = verifyToken(String(header).split(' ')[1]);
+    // console.log(decodedToken);
+    if (decodedToken != '') {
+        search(req, res, 'marcas');
+    } 
+    return; 
 });
 
 app.post('/api/search/modelos', (req, res) => {
     console.log('Running search modelos ');
-    search(req, res, 'models');
-    // return 
+    const header = req.headers.authorization;
+    if (typeof header == 'undefined') {
+        // console.log('Wrong request! No header.');
+        // Send a response
+        res.status(401).json({ message: 'unathorized' });
+        return;
+    }
+
+    // console.log(header);
+    decodedToken = verifyToken(String(header).split(' ')[1]);
+    // console.log(decodedToken);
+    if (decodedToken != '') {
+        search(req, res, 'models');
+    } 
+    return;
 });
 
 
@@ -82,6 +119,12 @@ app.get('/getToken', (req, res) => {
     const payload = { userId: 123, username: 'john.doe' };
     const token = generateToken(payload);
     
+
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+
     // Send a response
     res.status(200).json({ 'token': token });  
 });
@@ -189,7 +232,6 @@ async function saveDataToDatabase(code, title, brand_code, brand_title) {
         const client = await db_pool.connect();
         await client.query(query, values);
         client.release();
-        // console.log('Data saved to the database', values);
         return 'Data saved to the database';
 
     } catch (error) {
@@ -213,7 +255,13 @@ app.use('/api', createProxyMiddleware({
 }));
 
 */
-
+// Enable CORS for all routes
+app.use((req, res, next) => {
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    next();
+});
 
 
 
@@ -237,7 +285,7 @@ function search(req, res, type) {
             query = 'SELECT code, title, brand_title, notes FROM models WHERE brand_code = ' + code; 
             break;                
         default:
-            query = 'SELECT DISTINCT brand_title FROM models';        
+            query = 'SELECT DISTINCT brand_code, brand_title FROM models';        
     }
 
 
