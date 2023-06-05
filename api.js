@@ -5,80 +5,86 @@
 ///
 const { generateToken, verifyToken } = require('./jwt.js');
 
+// PGSQL implementation 
+const db_pool = require('./db_conn.js');
 
-function getToken(req, res) {
-    console.log('Running function getToken...');
-    // Generate a token
-    // forced authentication with statis credentials 
-    // TODO to add chunk to receive user and password
-    const payload = { userId: 123, username: 'john.doe' };
-    const token = generateToken(payload);
 
-    // Send a response
-    return res.status(200).json({ 'token': token });  
-}
+////////
+/// Search
+////
 
 
 
-function importData(req, res) { 
-    
-
-/*     if (decodedToken > 0) {
-
-        // Process the JSON data
-        console.log('Received JSON data:', jsonData);
-        processJSONData(jsonData);  
-        msg = processQueue();  
-
-        // Send a response
-        res.status(200).json({ message: msg });
-
-    } else {
-        // Send a response
-        res.status(498).json({ message: 'Invalid Token!'});
+function search(req, res, type) {
+    // console.log('body', req.body);
+    query = '';
+    switch (type) {
+        case 'brands':
+            query = 'SELECT DISTINCT brand_name FROM models';
+            break;
+        case 'models':
+            code = req.body.code, type;
+            query = 'SELECT code, title, brand_title, notes FROM models WHERE brand_code = ' + code; 
+            break;                
+        default:
+            query = 'SELECT DISTINCT brand_code, brand_title FROM models';        
     }
-*/
+
+
+    try {
+        db_pool.query(query, (err, result) => {
+            if (err) {
+                console.error('Error executing query:', err);
+                res.status(500).json({ error: 'Internal Server Error: Inexistent id'});
+                return;
+            }
+            
+            const rows = result.rows;
+            // Process the retrieved records
+            // console.log('rows:', rows);
+            res.json({data: rows});      
+    
+        });      
+
+    } catch (error) {
+        console.log("Internal Error");
+        res.status(500).json({ error: 'Internal Server Error '});
+    }
+           
+    return 
 }
 
 
-
-
-
-
-function search(keyword) {
-    console.log('searching for ' + keyword + ' in the DB... ');
-  
-    if (keyword == 'marcas') {
-      const jsonData = {'marcas': [
-        { codigo: '20', nome: 'Ferrari' },
-        { codigo: '21', nome: 'Fiat' },
-        { codigo: '149', nome: 'Fibravan' },
-        { codigo: '22', nome: 'Ford' },
-        { codigo: '190', nome: 'FOTON' },
-        { codigo: '170', nome: 'Fyber' },
-        { codigo: '199', nome: 'GEELY' },
-        { codigo: '23', nome: 'GM - Chevrolet' }
-      ]}
-      jsonData.marcas.forEach(item => {
-        console.log(item)
-        
-      });
-    
-    } else {
-      const jsonData = {'codigos': [
-        { codigo: '20', nome: 'Ferrari', notes: '' },
-        { codigo: '21', nome: 'Fiat', notes: ''},
-        { codigo: '149', nome: 'Fibravan', notes: '' },
-        { codigo: '22', nome: 'Ford', notes: '' },
-        { codigo: '190', nome: 'FOTON', notes: '' },
-        { codigo: '170', nome: 'Fyber', notes: '' },
-        { codigo: '199', nome: 'GEELY', notes: '' },
-        { codigo: '23', nome: 'GM - Chevrolet', notes: '' }
-      ]}
-      jsonData.codigos.forEach(item => {
-        console.log(item)
-      });
-    }  
+const getModels = (req, res) => {
+  const header = req.headers.authorization;
+  if (typeof header == 'undefined') {
+      // console.log('Wrong request! No header.');
+      // Send a response
+      res.status(401).json({ message: 'unathorized' });
+      return;
   }
 
-module.exports={ getToken, importData, search}
+  // console.log(header);
+  if (verifyToken(String(header).split(' ')[1]) != '') {
+      search(req, res, 'models');
+  } 
+  return;
+}
+
+const getBrands = (req, res) => {
+    const header = req.headers.authorization;
+    if (typeof header == 'undefined') {
+        // console.log('Wrong request! No header.');
+        // Send a response
+        res.status(401).json({ message: 'unathorized' });
+        return;
+    }
+
+    // console.log(header);
+    if (verifyToken(String(header).split(' ')[1]) != '') {
+        search(req, res, 'marcas');
+    } 
+
+
+}
+module.exports={ getModels, getBrands, search }

@@ -34,5 +34,41 @@ const getId = (code, type) => {
     return;
 };
 
+const insertModel = async (code, title, brand_code, brand_title) => {
+    const query = 'INSERT INTO models (code, title, brand_code, brand_title) VALUES ($1, $2, $3, $4)'
+    const values = [parseInt(code), String(title), parseInt(brand_code), String(brand_title)]
 
-module.exports= { getId }
+    try {
+        const client = await db_pool.connect();
+        await client.query(query, values);
+        client.release();
+        console.log('Data saved to the database');
+        return;
+
+    } catch (error) {
+        console.error('Error saving data to the database.', error);
+        return 1;
+    }
+    
+};
+
+
+const updateModel = async (code, title, brand_code, brand_title) => {
+    const query = 'UPDATE models SET code = $1, title = $2, brand_code = $3, brand_title = $4';
+    const values = [parseInt(code), String(title), parseInt(brand_code), String(brand_title)];
+
+    try {
+        const client = await db_pool.connect();
+        await client.query(query, values);
+        client.release();
+        return;
+
+    } catch (error) {
+        console.error('Error saving data to the database.', error);
+        return 1;
+    }
+    
+};
+
+
+module.exports= { getId, insertModel, updateModel}
