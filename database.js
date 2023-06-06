@@ -35,39 +35,48 @@ const getId = (code, type) => {
 };
 
 const insertModel = async (code, title, brand_code, brand_title) => {
-    const query = 'INSERT INTO models (code, title, brand_code, brand_title) VALUES ($1, $2, $3, $4)'
-    const values = [parseInt(code), String(title), parseInt(brand_code), String(brand_title)]
-
-    try {
-        const client = await db_pool.connect();
-        await client.query(query, values);
-        client.release();
-        console.log('Data saved to the database');
-        return;
-
-    } catch (error) {
-        console.error('Error saving data to the database.', error);
-        return 1;
-    }
+    // verify if model already exists. if not, add it then.
     
+    //  console.log('***** verify id ', getId(code, brand_code));
+    // if (typeof getId(code, brand_code) == 'undefined') { }
+    
+
+        const query = 'INSERT INTO models (code, title, brand_code, brand_title) VALUES ($1, $2, $3, $4)'
+        const values = [parseInt(code), String(title), parseInt(brand_code), String(brand_title)]
+
+        try {
+            const client = await db_pool.connect();
+            await client.query(query, values);
+            client.release();
+            console.log('Data saved to the database');
+            return true;
+
+        } catch (error) {
+            console.error('Error saving data to the database.', error);
+        }
+        
+    return false;
 };
 
 
-const updateModel = async (code, title, brand_code, brand_title) => {
-    const query = 'UPDATE models SET code = $1, title = $2, brand_code = $3, brand_title = $4';
-    const values = [parseInt(code), String(title), parseInt(brand_code), String(brand_title)];
-
-    try {
+const updateModel = async (code, title, brand_title, notes) => {
+    console.log('UPDATE ',code, title, brand_title, notes)
+    
+    try {        
+        const query = `UPDATE "models" SET "title" = $2, "brand_title" = $3, "notes" = $4 WHERE "code" = $1`;
+        values = [code, title, brand_title, notes];
         const client = await db_pool.connect();
         await client.query(query, values);
         client.release();
-        return;
+        console.log('Data updated to the database');
+        // await client.end();
+        return true;
 
     } catch (error) {
         console.error('Error saving data to the database.', error);
-        return 1;
     }
     
+    return false;     
 };
 
 

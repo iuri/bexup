@@ -67,12 +67,14 @@ app.post('/update', (req, res) => {
 
     if (verifyToken(String(header).split(' ')[1]) != '') {
         // Process the JSON data
-        // console.log('Received JSON data:', jsonData);
-        updateModel(jsonData.code, jsonData.title, jsonData.brand_code, jsonData.brand_title);  
-        msg = processQueue();  
-
-        // Send a response
-        res.status(200).json({ message: msg });
+        console.log('Received JSON data:', jsonData);
+        updateModel(jsonData.code, jsonData.title, jsonData.brand_title, jsonData.notes).then(result => {
+            if (result) {
+                // Send a response
+                res.status(200).json({ message: result });
+            }            
+        });  
+        
 
     } else {
         // Send a response
