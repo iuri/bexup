@@ -65,10 +65,12 @@ const getModels = (req, res) => {
   }
 
   // console.log(header);
-  if (verifyToken(String(header).split(' ')[1]) != '') {
-      search(req, res, 'models');
-  } 
-  return;
+  console.log(verifyToken(String(header).split(' ')[1]))
+  if (verifyToken(String(header).split(' ')[1]) == null) {
+    res.status(401).json({ message: 'Invalid Token. Request a new one' });
+    return;
+  }
+  search(req, res, 'models');
 }
 
 const getBrands = (req, res) => {
