@@ -135,6 +135,34 @@ app.get('/getToken', (req, res) => {
 });
   
 
+
+app.post('/login', (req, res) => {
+    console.log('Running function getToken...');
+    // Generate a token
+    // forced authentication with statis credentials 
+    console.log('reqbody', req.body);
+    const payload = { userId: 123, username: 'john.doe' };
+    const token = generateToken(payload);
+    
+
+    res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+
+
+    // Send a response
+    res.status(200).json({
+        'token': token, 
+        'user': {
+            'id': 87654,
+            'firstNames': 'Iuri', 
+            'lastName': 'de Araujo',
+            'email': req.body.email
+        }
+    });  
+});
+
+
 // Enable CORS for all routes
 app.use((req, res, next) => {
     res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3000');
